@@ -24,24 +24,33 @@ const state = {
   editingIndex: null,
 };
 
+// 구분이 잘 되는 고대비 색상 팔레트로 변경
 const defaultColors = [
-  '#F8B195',
-  '#F67280',
-  '#C06C84',
-  '#6C5B7B',
-  '#355C7D',
-  '#99B898',
-  '#FECEAB',
-  '#FF847C',
+  '#E63946', // 빨간색
+  '#F77F00', // 주황색
+  '#FCBF49', // 노란색
+  '#06D6A0', // 청록색
+  '#118AB2', // 파란색
+  '#8338EC', // 보라색
+  '#FB8500', // 진한 주황색
+  '#219EBC', // 밝은 파란색
+  '#023047', // 네이비
+  '#FFB3C6', // 핑크색
+  '#8ECAE6', // 하늘색
+  '#FFD166', // 밝은 노란색
+  '#06FFA5', // 형광 청록색
+  '#FF006E', // 마젠타
+  '#3A86FF', // 밝은 파란색
+  '#FF7B00', // 밝은 주황색
 ];
 
 // 기본 옵션에 의미있는 텍스트 추가
 const getInitialOptions = () => [
-  { text: '옵션 1', weight: 1, color: '#F8B195' },
-  { text: '옵션 2', weight: 1, color: '#F67280' },
+  { text: '옵션 1', weight: 1, color: '#E63946' },
+  { text: '옵션 2', weight: 1, color: '#F77F00' },
 ];
 
-const storageKey = 'rouletteOptions_final_v3';
+const storageKey = 'rouletteOptions_final_v4'; // 색상 시스템 업데이트 반영
 
 // --- 데이터 처리 함수 ---
 const loadOptions = () => {
@@ -53,18 +62,51 @@ const saveOptions = () => {
   localStorage.setItem(storageKey, JSON.stringify(state.options));
 };
 
-const getRandomColor = () => {
+// 색상 중복 방지 시스템
+const getUniqueColor = () => {
   const usedColors = state.options.map((opt) => opt.color);
   const availableColors = defaultColors.filter((c) => !usedColors.includes(c));
+
   if (availableColors.length > 0) {
+    // 사용 가능한 기본 색상이 있으면 랜덤하게 선택
     return availableColors[Math.floor(Math.random() * availableColors.length)];
   }
-  return (
-    '#' +
-    Math.floor(Math.random() * 16777215)
+
+  // 기본 팔레트가 모두 사용되었을 경우, 고대비 랜덤 색상 생성
+  return generateHighContrastColor();
+};
+
+// 고대비 색상 생성 함수
+const generateHighContrastColor = () => {
+  const usedColors = state.options.map((opt) => opt.color);
+  let attempts = 0;
+  let newColor;
+
+  do {
+    // HSL을 사용하여 더 구분되는 색상 생성
+    const hue = Math.floor(Math.random() * 360);
+    const saturation = 70 + Math.floor(Math.random() * 30); // 70-100% 채도
+    const lightness = 40 + Math.floor(Math.random() * 20); // 40-60% 명도
+
+    newColor = hslToHex(hue, saturation, lightness);
+    attempts++;
+  } while (usedColors.includes(newColor) && attempts < 50);
+
+  return newColor;
+};
+
+// HSL을 HEX로 변환하는 함수
+const hslToHex = (h, s, l) => {
+  l /= 100;
+  const a = (s * Math.min(l, 1 - l)) / 100;
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color)
       .toString(16)
-      .padStart(6, '0')
-  );
+      .padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
 };
 
 // --- 렌더링 및 UI 업데이트 함수 ---
@@ -109,7 +151,7 @@ const drawRoulette = () => {
     ctx.fillStyle = option.color;
     ctx.fill();
 
-    // 조각 경계선 그리기
+    // 조각 경계선 그리기 (더 두껍게)
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(
@@ -117,7 +159,7 @@ const drawRoulette = () => {
       Math.sin(currentAngle) * radius
     );
     ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3; // 경계선을 더 두껍게
     ctx.stroke();
 
     currentAngle = endAngle;
@@ -128,7 +170,7 @@ const drawRoulette = () => {
   ctx.moveTo(0, 0);
   ctx.lineTo(Math.cos(currentAngle) * radius, Math.sin(currentAngle) * radius);
   ctx.strokeStyle = '#fff';
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 3;
   ctx.stroke();
 
   // 2단계: 텍스트 그리기
@@ -136,7 +178,7 @@ const drawRoulette = () => {
     const { option, centerAngle, arcSize } = segment;
 
     // 조각이 너무 작으면 텍스트 생략
-    const minAngleForText = Math.PI / 8; // 22.5도로 조정 (더 많은 텍스트 표시)
+    const minAngleForText = Math.PI / 8; // 22.5도
     if (arcSize < minAngleForText || !option.text.trim()) {
       continue;
     }
@@ -146,20 +188,17 @@ const drawRoulette = () => {
     // 텍스트 스타일 설정
     ctx.fillStyle = '#FFF';
     ctx.strokeStyle = '#000';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4; // 텍스트 테두리 더 두껍게
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
     // 조각 크기에 따른 폰트 크기 조정
     let fontSize = 16;
     if (arcSize < Math.PI / 6) {
-      // 30도 미만
       fontSize = 10;
     } else if (arcSize < Math.PI / 4) {
-      // 45도 미만
       fontSize = 12;
     } else if (arcSize < Math.PI / 3) {
-      // 60도 미만
       fontSize = 14;
     }
 
@@ -188,7 +227,7 @@ const drawRoulette = () => {
       displayText = displayText.substring(0, maxLength - 2) + '..';
     }
 
-    // 텍스트 그리기
+    // 텍스트 그리기 (테두리 먼저, 그 다음 내용)
     ctx.strokeText(displayText, 0, 0);
     ctx.fillText(displayText, 0, 0);
 
@@ -207,7 +246,7 @@ const updateOptionListUI = () => {
       <div class="option-details">
         <div class="color-swatch" style="background-color: ${
           option.color
-        };"></div>
+        }; border: 2px solid #fff;"></div>
         <div class="option-text-details">
           <span class="option-text">${option.text || '(이름 없음)'}</span>
           <span class="option-weight">비중: ${option.weight}</span>
@@ -245,7 +284,7 @@ const addOption = (e) => {
 
   $optionInput.value = '';
   $weightInput.value = '1';
-  $colorInput.value = getRandomColor();
+  $colorInput.value = getUniqueColor(); // 고유한 색상 자동 할당
   saveOptions();
   render();
 };
@@ -362,7 +401,6 @@ const spin = () => {
   const targetAngle = winnerCenterAngle + randomOffset;
 
   // 5. 화살표(12시)가 목표 지점을 가리키도록 회전 각도 계산
-  // 목표 각도만큼 시계방향으로 회전시켜야 화살표가 해당 위치를 가리킴
   const baseRotation = targetAngle;
 
   // 6. 추가 회전 (시각적 효과) - 시계 방향으로 여러 바퀴
@@ -388,7 +426,7 @@ const spin = () => {
   console.log(`목표 각도: ${targetAngle}°, 최종 회전: ${finalRotation}°`);
 };
 
-// 스핀 완료 처리 함수 (누락된 함수 추가)
+// 스핀 완료 처리 함수
 const finishSpin = (winner) => {
   state.isSpinning = false;
   $spinButton.disabled = false;
@@ -404,7 +442,7 @@ const finishSpin = (winner) => {
 const init = () => {
   loadOptions();
   render();
-  $colorInput.value = getRandomColor();
+  $colorInput.value = getUniqueColor(); // 초기 색상도 고유하게 설정
 
   $optionForm.addEventListener('submit', addOption);
   $spinButton.addEventListener('click', spin);
