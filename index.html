@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>프로페셔널 룰렛</title>
+    <title>프로페셔널 룰렛 (비중 적용)</title>
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/reset-css@5.0.2/reset.min.css"
@@ -23,12 +23,25 @@
       <aside class="options-section">
         <h2>룰렛 옵션 관리</h2>
         <form id="option-form">
-          <input
-            type="text"
-            id="option-input"
-            placeholder="새 옵션을 입력하세요"
-            required
-          />
+          <div class="input-group">
+            <label for="option-input">옵션명</label>
+            <input
+              type="text"
+              id="option-input"
+              placeholder="예: 한식"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <label for="weight-input">비중 (숫자가 클수록 확률 UP)</label>
+            <input
+              type="number"
+              id="weight-input"
+              value="1"
+              min="0.1"
+              step="0.1"
+            />
+          </div>
           <button type="submit">추가</button>
         </form>
         <ul id="option-list"></ul>

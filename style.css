@@ -104,54 +104,47 @@ h2 {
 
 #option-form {
   display: flex;
+  flex-direction: column; /* 세로 정렬로 변경 */
+  gap: 1rem; /* 입력 그룹 간의 간격 추가 */
   margin-bottom: 2rem;
 }
 
-#option-input {
-  flex-grow: 1;
+.input-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label {
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+  color: #ccc;
+}
+
+#option-input,
+#weight-input {
+  width: 100%;
+  box-sizing: border-box; /* 패딩 포함 크기 계산 */
   padding: 0.8rem;
   border: 2px solid var(--secondary-color);
   background: var(--bg-color);
   color: var(--text-color);
-  border-radius: 5px 0 0 5px;
+  border-radius: 5px;
   font-size: 1rem;
 }
 
 #option-form button {
-  padding: 0.8rem 1.5rem;
-  border: none;
-  background: var(--secondary-color);
-  color: var(--text-color);
-  border-radius: 0 5px 5px 0;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-#option-list {
-  list-style: none;
-}
-
-#option-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--secondary-color);
-  padding: 0.8rem;
   border-radius: 5px;
-  margin-bottom: 0.5rem;
-}
-
-#option-list .delete-btn {
-  background: none;
+  padding: 0.8rem;
   border: none;
-  color: #ff7a90;
-  font-size: 1.2rem;
+  background: var(--accent-color);
+  color: var(--text-color);
   cursor: pointer;
-  transition: color 0.2s;
+  font-size: 1.1rem;
+  font-weight: bold;
 }
 
-#option-list .delete-btn:hover {
-  color: var(--accent-color);
+#option-list li span {
+  font-weight: 500;
 }
 
 /* 반응형 디자인 */

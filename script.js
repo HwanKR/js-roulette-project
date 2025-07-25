@@ -3,6 +3,7 @@ const $canvas = document.getElementById('roulette-canvas');
 const $spinButton = document.getElementById('spin-button');
 const $optionForm = document.getElementById('option-form');
 const $optionInput = document.getElementById('option-input');
+const $weightInput = document.getElementById('weight-input'); // 비중 입력 필드 추가
 const $optionList = document.getElementById('option-list');
 
 const ctx = $canvas.getContext('2d');
@@ -17,16 +18,20 @@ const colors = [
   '#FF847C',
 ];
 
-// 애플리케이션의 상태 관리 객체
+// 애플리케이션의 상태 관리 객체 (옵션 구조 변경)
 const state = {
-  options: ['옵션 1', '옵션 2', '옵션 3', '옵션 4'],
+  options: [
+    { text: '한식', weight: 2 },
+    { text: '일식', weight: 1 },
+    { text: '중식', weight: 1.5 },
+  ],
   currentAngle: 0,
   isSpinning: false,
 };
 
 // 로컬 스토리지에서 옵션 불러오기
 function loadOptions() {
-  const savedOptions = localStorage.getItem('rouletteOptions');
+  const savedOptions = localStorage.getItem('rouletteOptionsWeighted');
   if (savedOptions) {
     state.options = JSON.parse(savedOptions);
   }
@@ -34,26 +39,36 @@ function loadOptions() {
 
 // 로컬 스토리지에 옵션 저장하기
 function saveOptions() {
-  localStorage.setItem('rouletteOptions', JSON.stringify(state.options));
+  localStorage.setItem(
+    'rouletteOptionsWeighted',
+    JSON.stringify(state.options)
+  );
 }
 
-// 룰렛 그리기 함수
+// 룰렛 그리기 함수 (비중 기반으로 로직 변경)
 function drawRoulette() {
-  const arcSize = (2 * Math.PI) / state.options.length;
+  const totalWeight = state.options.reduce((sum, opt) => sum + opt.weight, 0);
+  if (totalWeight <= 0) return;
+
   const centerX = $canvas.width / 2;
   const centerY = $canvas.height / 2;
   const radius = $canvas.width / 2 - 10;
 
+  let currentDrawingAngle = 0; // 각 조각의 시작 각도
+
   ctx.clearRect(0, 0, $canvas.width, $canvas.height);
   ctx.save();
   ctx.translate(centerX, centerY);
-  ctx.rotate(state.currentAngle);
+  ctx.rotate(state.currentAngle); // 전체 회전 적용
 
   state.options.forEach((option, i) => {
-    const angle = i * arcSize;
+    const arcSize = (option.weight / totalWeight) * 2 * Math.PI;
+    const endDrawingAngle = currentDrawingAngle + arcSize;
+
+    // 조각 그리기
     ctx.beginPath();
-    ctx.arc(0, 0, radius, angle, angle + arcSize, false);
-    ctx.arc(0, 0, 0, angle + arcSize, angle, true);
+    ctx.arc(0, 0, radius, currentDrawingAngle, endDrawingAngle, false);
+    ctx.arc(0, 0, 0, endDrawingAngle, currentDrawingAngle, true);
     ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
 
@@ -63,36 +78,44 @@ function drawRoulette() {
     ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.rotate(angle + arcSize / 2);
-    ctx.fillText(option, radius * 0.6, 0);
+    const textAngle = currentDrawingAngle + arcSize / 2;
+    ctx.rotate(textAngle);
+    ctx.fillText(option.text, radius * 0.6, 0);
     ctx.restore();
+
+    currentDrawingAngle = endDrawingAngle; // 다음 조각을 위해 시작 각도 업데이트
   });
   ctx.restore();
 }
 
-// 옵션 리스트 UI 업데이트
+// 옵션 리스트 UI 업데이트 (비중 표시)
 function updateOptionListUI() {
   $optionList.innerHTML = '';
   state.options.forEach((option, index) => {
     const li = document.createElement('li');
-    li.textContent = option;
+    const content = document.createElement('span');
+    content.textContent = `${option.text} (비중: ${option.weight})`;
+
     const deleteBtn = document.createElement('button');
     deleteBtn.textContent = '×';
     deleteBtn.className = 'delete-btn';
     deleteBtn.onclick = () => removeOption(index);
+
+    li.appendChild(content);
     li.appendChild(deleteBtn);
     $optionList.appendChild(li);
   });
 }
 
-// 옵션 추가
+// 옵션 추가 (비중 값 포함)
 function addOption(e) {
   e.preventDefault();
   const newOption = $optionInput.value.trim();
-  if (newOption && state.options.length < 12) {
-    // 최대 12개 옵션
-    state.options.push(newOption);
+  const weight = parseFloat($weightInput.value) || 1;
+  if (newOption && weight > 0 && state.options.length < 12) {
+    state.options.push({ text: newOption, weight: weight });
     $optionInput.value = '';
+    $weightInput.value = '1';
     saveOptions();
     render();
   }
@@ -101,7 +124,6 @@ function addOption(e) {
 // 옵션 제거
 function removeOption(index) {
   if (state.options.length > 2) {
-    // 최소 2개 옵션 유지
     state.options.splice(index, 1);
     saveOptions();
     render();
@@ -110,14 +132,14 @@ function removeOption(index) {
   }
 }
 
-// 회전 애니메이션
+// 회전 애니메이션 (변경 없음)
 function spin() {
   if (state.isSpinning) return;
   state.isSpinning = true;
   $spinButton.disabled = true;
 
-  const totalRotation = Math.random() * 360 + 360 * 5; // 최소 5바퀴 + 랜덤 회전
-  const duration = 5000; // 5초
+  const totalRotation = Math.random() * 360 + 360 * 5;
+  const duration = 5000;
   let startTime = null;
 
   function animate(currentTime) {
@@ -125,7 +147,6 @@ function spin() {
     const elapsedTime = currentTime - startTime;
     const progress = Math.min(elapsedTime / duration, 1);
 
-    // ease-out-cubic 효과
     const easeProgress = 1 - Math.pow(1 - progress, 4);
     const rotation = totalRotation * easeProgress;
     state.currentAngle = (rotation * Math.PI) / 180;
@@ -139,27 +160,43 @@ function spin() {
     }
   }
 
-  // 효과음 재생 (필요시 주석 해제)
-  // new Audio('spin_sound.mp3').play();
   requestAnimationFrame(animate);
 }
 
-// 회전 종료 및 결과 처리
+// 회전 종료 및 결과 처리 (비중 기반으로 로직 변경)
 function finishSpin() {
   state.isSpinning = false;
   $spinButton.disabled = false;
 
-  const totalAngle = (state.currentAngle * 180) / Math.PI;
-  const degreesPerOption = 360 / state.options.length;
-  // 화살표가 가리키는 위치 (90도 보정)
-  const winningAngle = (360 - (totalAngle % 360) + 270) % 360;
-  const winningIndex = Math.floor(winningAngle / degreesPerOption);
-  const winner = state.options[winningIndex];
+  const totalWeight = state.options.reduce((sum, opt) => sum + opt.weight, 0);
+  if (totalWeight <= 0) return;
+
+  const finalAngleInDegrees = (state.currentAngle * 180) / Math.PI;
+  const pointerAngle = (360 - (finalAngleInDegrees % 360) + 270) % 360;
+
+  let cumulativeAngle = 0;
+  let winner = null;
+
+  for (const option of state.options) {
+    const optionAngle = (option.weight / totalWeight) * 360;
+    if (
+      pointerAngle >= cumulativeAngle &&
+      pointerAngle < cumulativeAngle + optionAngle
+    ) {
+      winner = option.text;
+      break;
+    }
+    cumulativeAngle += optionAngle;
+  }
+
+  // 혹시 모를 오차를 위한 폴백
+  if (!winner) {
+    winner = state.options[state.options.length - 1].text;
+  }
 
   setTimeout(() => {
     alert(`🎉 당첨: ${winner} 🎉`);
     confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
-    // new Audio('win_sound.mp3').play();
   }, 100);
 }
 
