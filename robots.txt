@@ -1,0 +1,6 @@
+# 모든 검색 로봇에게 적용되는 규칙
+User-agent: *
+Allow: /
+
+# 사이트맵 파일의 위치 안내
+Sitemap: https://myroulette.kr/sitemap.xml
