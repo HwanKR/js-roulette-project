@@ -59,8 +59,8 @@
       : generateHighContrastColor();
   };
   const getInitialOptions = () => [
-    { text: '치킨', color: '#F8B195', weight: 1 },
-    { text: '피자', color: '#F67280', weight: 1 },
+    { text: '옵션1', color: '#F8B195', weight: 1 },
+    { text: '옵션2', color: '#F67280', weight: 1 },
   ];
   const loadOptions = () => {
     const saved = localStorage.getItem(storageKey);
