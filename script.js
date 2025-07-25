@@ -27,7 +27,6 @@
     '#8ECAE6',
     '#FFD166',
   ];
-
   const state = { options: [], currentAngle: 0, isSpinning: false };
 
   /* -------------------- UTILS ------------------ */
@@ -43,14 +42,12 @@
     };
     return `#${f(0)}${f(8)}${f(4)}`;
   };
-
   const generateHighContrastColor = () => {
     const h = Math.floor(Math.random() * 360);
     const s = 70 + Math.floor(Math.random() * 30);
     const l = 40 + Math.floor(Math.random() * 20);
     return hslToHex(h, s, l);
   };
-
   const getUniqueColor = () => {
     const used = state.options.map((o) => o.color);
     const avail = defaultColors.filter((c) => !used.includes(c));
@@ -58,49 +55,36 @@
       ? avail[Math.floor(Math.random() * avail.length)]
       : generateHighContrastColor();
   };
-
   const getInitialOptions = () => [
-    { text: '한식', color: '#F8B195', weight: 1 },
-    { text: '중식', color: '#F67280', weight: 1 },
-    { text: '일식', color: '#C06C84', weight: 1 },
-    { text: '양식', color: '#6C5B7B', weight: 1 },
-    { text: '분식', color: '#355C7D', weight: 1 },
+    { text: '치킨', color: '#F8B195', weight: 1 },
+    { text: '피자', color: '#F67280', weight: 1 },
   ];
-
   const loadOptions = () => {
     const saved = localStorage.getItem(storageKey);
     state.options = saved ? JSON.parse(saved) : getInitialOptions();
   };
-
   const saveOptions = () =>
     localStorage.setItem(storageKey, JSON.stringify(state.options));
-
-  const getTotalWeight = () =>
-    state.options.reduce((sum, o) => sum + o.weight, 0);
+  const getTotalWeight = () => state.options.reduce((s, o) => s + o.weight, 0);
 
   /* -------------------- DRAW ------------------- */
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = canvas.width / 2;
-
+  const centerX = canvas.width / 2,
+    centerY = centerX,
+    radius = centerX;
   const drawRoulette = () => {
     const total = getTotalWeight();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (total <= 0) return;
-
+    if (!total) return;
     let start = state.currentAngle;
-
     state.options.forEach((o) => {
-      const arc = (o.weight / total) * 2 * Math.PI;
-      const end = start + arc;
-
+      const arc = (o.weight / total) * 2 * Math.PI,
+        end = start + arc;
       ctx.beginPath();
       ctx.moveTo(centerX, centerY);
       ctx.arc(centerX, centerY, radius, start, end);
       ctx.closePath();
       ctx.fillStyle = o.color;
       ctx.fill();
-
       ctx.save();
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 2;
@@ -112,21 +96,17 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.font = `bold ${Math.max(10, Math.min(18, arc * 20))}px Arial`;
-
-      const mid = start + arc / 2;
-      const flipped = mid > Math.PI / 2 && mid < (3 * Math.PI) / 2;
-      const rot = flipped ? mid + Math.PI : mid;
-      const tx = centerX + (radius / 1.6) * Math.cos(mid);
-      const ty = centerY + (radius / 1.6) * Math.sin(mid);
-      ctx.translate(tx, ty);
-      ctx.rotate(rot);
-
-      let text = o.text;
-      if (ctx.measureText(text).width > radius / 2)
-        text = text.slice(0, 5) + '..';
-      ctx.fillText(text, 0, 0);
+      const mid = start + arc / 2,
+        flip = mid > Math.PI / 2 && mid < 1.5 * Math.PI;
+      ctx.translate(
+        centerX + (radius / 1.6) * Math.cos(mid),
+        centerY + (radius / 1.6) * Math.sin(mid)
+      );
+      ctx.rotate(flip ? mid + Math.PI : mid);
+      let txt = o.text;
+      if (ctx.measureText(txt).width > radius / 2) txt = txt.slice(0, 5) + '..';
+      ctx.fillText(txt, 0, 0);
       ctx.restore();
-
       start = end;
     });
   };
@@ -142,15 +122,21 @@
       return;
     }
     state.options.forEach((o, i) => {
+      const pickerId = `color-picker-${i}`;
       const li = document.createElement('li');
       li.dataset.index = i;
       li.innerHTML = `
         <div class="option-content">
           <div class="color-section">
-            <div class="color-swatch" style="background:${
-              o.color
-            }" data-index="${i}"></div>
-            <span class="edit-icon">🎨</span>
+            <!-- 실제 컬러 피커 -->
+            <input type="color" id="${pickerId}" class="color-picker" value="${
+        o.color
+      }" data-index="${i}"
+                   style="width:0;height:0;opacity:0;border:none;padding:0;margin:0;" />
+            <!-- 레이블 = 클릭 영역 -->
+            <label for="${pickerId}" class="color-label">
+              <div class="color-swatch" style="background:${o.color}"></div>
+            </label>
           </div>
           <div class="text-section">
             <div class="text-edit-group">
@@ -181,23 +167,23 @@
   };
 
   /* -------------------- EVENTS ----------------- */
-  const handleAddOption = (e) => {
+  optionForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const txt = optionInput.value.trim();
-    const wt = parseFloat(weightInput.value);
-    if (!txt || !(wt > 0)) {
+    const txt = optionInput.value.trim(),
+      wt = parseFloat(weightInput.value);
+    if (!txt || wt <= 0) {
       alert('옵션명과 유효한 비중 값을 입력해주세요.');
       return;
     }
     state.options.push({ text: txt, weight: wt, color: colorInput.value });
-
     optionForm.reset();
     weightInput.value = '1';
     colorInput.value = getUniqueColor();
     updateAndSave();
-  };
+  });
 
-  const handleListClick = (e) => {
+  /* 텍스트·비중 인라인 편집 & 삭제 */
+  optionList.addEventListener('click', (e) => {
     const li = e.target.closest('li');
     if (!li) return;
     const idx = parseInt(li.dataset.index, 10);
@@ -211,18 +197,30 @@
       updateAndSave();
       return;
     }
-    if (e.target.closest('.color-section')) {
-      startColorEdit(idx, e);
-      return;
-    }
-
     if (e.target.classList.contains('editable'))
       startInlineEdit(e.target, idx, e.target.dataset.field);
     else if (e.target.classList.contains('edit-icon')) {
       const span = e.target.parentElement.querySelector('.editable');
       if (span) startInlineEdit(span, idx, span.dataset.field);
     }
-  };
+  });
+
+  /* 색상 변경: input[type=color] change 이벤트 */
+  optionList.addEventListener('change', (e) => {
+    if (!e.target.classList.contains('color-picker')) return;
+    const idx = parseInt(e.target.dataset.index, 10),
+      newColor = e.target.value;
+    const dup = state.options.some((o, i) => i !== idx && o.color === newColor);
+    if (
+      dup &&
+      !confirm('이미 사용 중인 색상입니다. 그래도 사용하시겠습니까?')
+    ) {
+      e.target.value = state.options[idx].color;
+      return;
+    }
+    state.options[idx].color = newColor;
+    updateAndSave();
+  });
 
   const startInlineEdit = (el, idx, field) => {
     if (el.querySelector('input')) return;
@@ -236,12 +234,10 @@
       input.min = '0.1';
       input.step = '0.1';
     }
-
     el.style.display = 'none';
     el.after(input);
     input.focus();
     input.select();
-
     const finish = () => {
       const val = input.value;
       if (field === 'text' && val.trim()) state.options[idx].text = val.trim();
@@ -261,69 +257,24 @@
     });
   };
 
-  /* --------- 색상 편집: 팔레트 위치 개선 -------- */
-  const startColorEdit = (idx, ev) => {
-    const { clientX: x, clientY: y } = ev;
-    const picker = document.createElement('input');
-    picker.type = 'color';
-    picker.value = state.options[idx].color;
-    picker.style.cssText = `
-      position:fixed;
-      left:${x}px;
-      top:${y + 10}px; /* 클릭 지점 바로 아래 */
-      width:28px;height:28px;
-      opacity:0;       /* 시각적 방해 최소화 */
-      z-index:9999;`;
-
-    document.body.appendChild(picker);
-
-    /* 일부 브라우저는 click 대신 showPicker() 지원 */
-    if (picker.showPicker) picker.showPicker();
-    else picker.click();
-
-    const cleanup = () => picker.remove();
-
-    picker.addEventListener(
-      'change',
-      (e) => {
-        const newColor = e.target.value;
-        if (state.options.some((o, i) => i !== idx && o.color === newColor)) {
-          if (!confirm('이미 사용 중인 색상입니다. 그래도 사용하시겠습니까?')) {
-            cleanup();
-            return;
-          }
-        }
-        state.options[idx].color = newColor;
-        updateAndSave();
-        cleanup();
-      },
-      { once: true }
-    );
-
-    picker.addEventListener('blur', cleanup, { once: true });
-  };
-
-  const handleResetOptions = () => {
+  resetButton.addEventListener('click', () => {
     if (confirm('모든 옵션을 초기 설정으로 되돌리시겠습니까?')) {
       state.options = getInitialOptions();
       state.currentAngle = 0;
       updateAndSave();
     }
-  };
+  });
 
   /* -------------------- SPIN ------------------- */
   const spin = () => {
     if (state.isSpinning || state.options.length < 2) return;
-
-    /* 이전 당첨 모달이 열려 있으면 제거 */
     document.getElementById('result-modal')?.remove();
-
     state.isSpinning = true;
     spinButton.disabled = true;
     spinButton.textContent = 'SPINNING...';
 
-    const total = getTotalWeight();
-    const rand = Math.random() * total;
+    const total = getTotalWeight(),
+      rand = Math.random() * total;
     let acc = 0,
       winIdx = 0;
     for (let i = 0; i < state.options.length; i++) {
@@ -333,29 +284,25 @@
         break;
       }
     }
-
     const arcPer = (2 * Math.PI) / total;
     let startArc = 0;
     for (let i = 0; i < winIdx; i++)
       startArc += state.options[i].weight * arcPer;
-    const winArcMid = startArc + (state.options[winIdx].weight * arcPer) / 2;
-
-    const pointer = -Math.PI / 2;
-    const rotMod = state.currentAngle % (2 * Math.PI);
-    let needRot = (pointer - winArcMid - rotMod + 2 * Math.PI) % (2 * Math.PI);
-
-    const totalRot = 5 * 2 * Math.PI + needRot;
-    const duration = 5000;
-    let startTime = null;
-    const baseRot = state.currentAngle;
-
-    const animate = (ts) => {
-      if (!startTime) startTime = ts;
-      const t = Math.min((ts - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 4);
-      state.currentAngle = baseRot + eased * totalRot;
+    const winMid = startArc + (state.options[winIdx].weight * arcPer) / 2;
+    const pointer = -Math.PI / 2,
+      rotMod = state.currentAngle % (2 * Math.PI);
+    const needRot = (pointer - winMid - rotMod + 2 * Math.PI) % (2 * Math.PI);
+    const totalRot = 5 * 2 * Math.PI + needRot,
+      duration = 5000,
+      baseRot = state.currentAngle;
+    let t0 = null;
+    const anim = (ts) => {
+      if (!t0) t0 = ts;
+      const p = Math.min((ts - t0) / duration, 1),
+        ease = 1 - Math.pow(1 - p, 4);
+      state.currentAngle = baseRot + ease * totalRot;
       drawRoulette();
-      if (t < 1) requestAnimationFrame(animate);
+      if (p < 1) requestAnimationFrame(anim);
       else {
         state.currentAngle = (baseRot + totalRot) % (2 * Math.PI);
         drawRoulette();
@@ -365,31 +312,23 @@
         spinButton.textContent = 'SPIN!';
       }
     };
-    requestAnimationFrame(animate);
+    requestAnimationFrame(anim);
   };
+  spinButton.addEventListener('click', spin);
 
   /* ------------- RESULT MODAL ------------------ */
   const showResult = (winner) => {
     confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
-
     const modal = document.createElement('div');
     modal.id = 'result-modal';
     modal.className = 'modal-container';
-    modal.style.cssText = `
-      position:fixed;inset:0;display:flex;align-items:center;
-      justify-content:center;background:rgba(0,0,0,0.6);z-index:9998;`;
+    modal.style.cssText =
+      'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:9998;';
     modal.innerHTML = `
-      <div class="modal-content" style="
-        background:#222;padding:2rem 2.5rem;border-radius:12px;text-align:center;
-        box-shadow:0 8px 20px rgba(0,0,0,0.5);">
+      <div class="modal-content" style="background:#222;padding:2rem 2.5rem;border-radius:12px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.5);">
         <h2 style="font-size:1.8rem;margin-bottom:1rem;">🎉 당첨 🎉</h2>
-        <p style="background:${winner.color};padding:0.8rem 1.2rem;
-                  border-radius:6px;font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;">
-          ${winner.text}
-        </p>
-        <button id="close-result" style="
-          padding:0.6rem 1.8rem;border:none;border-radius:6px;cursor:pointer;
-          font-weight:bold;background:#e94560;color:#fff;">닫기</button>
+        <p style="background:${winner.color};padding:0.8rem 1.2rem;border-radius:6px;font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;">${winner.text}</p>
+        <button id="close-result" style="padding:0.6rem 1.8rem;border:none;border-radius:6px;cursor:pointer;font-weight:bold;background:#e94560;color:#fff;">닫기</button>
       </div>`;
     document.body.append(modal);
     modal
@@ -398,18 +337,10 @@
   };
 
   /* -------------------- INIT ------------------- */
-  const init = () => {
-    /* 하단 edit-modal 제거 */
+  (() => {
     document.getElementById('edit-modal')?.remove();
-
     loadOptions();
     colorInput.value = getUniqueColor();
     updateAndSave();
-
-    optionForm.addEventListener('submit', handleAddOption);
-    optionList.addEventListener('click', handleListClick);
-    resetButton.addEventListener('click', handleResetOptions);
-    spinButton.addEventListener('click', spin);
-  };
-  init();
+  })();
 })();
