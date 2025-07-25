@@ -6,7 +6,6 @@
   --text-color: #f0f0f0;
   --white-color: #ffffff;
 }
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -14,13 +13,11 @@ body {
   color: var(--text-color);
   line-height: 1.6;
 }
-
 .app-container {
   display: flex;
   flex-wrap: wrap;
   min-height: 100vh;
 }
-
 .roulette-section {
   flex: 2;
   display: flex;
@@ -30,7 +27,6 @@ body {
   padding: 2rem;
   min-width: 400px;
 }
-
 h1 {
   font-size: 3rem;
   font-weight: 700;
@@ -38,31 +34,29 @@ h1 {
   letter-spacing: 2px;
   margin-bottom: 2rem;
 }
-
 .roulette-container {
   position: relative;
   width: 450px;
   height: 450px;
 }
-
-#roulette-canvas {
-  transition: transform 5s cubic-bezier(0.1, 0.7, 0.1, 1);
-}
-
 #arrow {
   position: absolute;
-  top: 50%;
+  top: -10px;
   left: 50%;
-  transform: translate(-50%, -100%);
+  transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 35px solid var(--accent-color);
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 25px solid var(--accent-color);
+  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3));
   z-index: 10;
 }
-
+#roulette-canvas {
+  transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
 #spin-button {
   margin-top: 2rem;
   padding: 1rem 3rem;
@@ -76,18 +70,15 @@ h1 {
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
-
 #spin-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
 }
-
 #spin-button:disabled {
   cursor: not-allowed;
   background: #555;
   box-shadow: none;
 }
-
 .options-section {
   flex: 1;
   background-color: var(--primary-color);
@@ -95,36 +86,36 @@ h1 {
   min-width: 320px;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
 }
-
 h2 {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid var(--secondary-color);
   padding-bottom: 0.5rem;
 }
-
 #option-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 2rem;
 }
-
+.input-row {
+  display: flex;
+  gap: 1rem;
+}
 .input-group {
   display: flex;
   flex-direction: column;
 }
-
+.text-group {
+  flex-grow: 1;
+}
 .input-group label {
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
   color: #ccc;
 }
-
-#option-input,
-#weight-input,
-#modal-option-input,
-#modal-weight-input {
+input[type='text'],
+input[type='number'] {
   width: 100%;
   box-sizing: border-box;
   padding: 0.8rem;
@@ -134,7 +125,15 @@ h2 {
   border-radius: 5px;
   font-size: 1rem;
 }
-
+input[type='color'] {
+  width: 50px;
+  height: 46px;
+  padding: 5px;
+  border: 2px solid var(--secondary-color);
+  border-radius: 5px;
+  background: var(--bg-color);
+  cursor: pointer;
+}
 #option-form button {
   border-radius: 5px;
   padding: 0.8rem;
@@ -145,13 +144,12 @@ h2 {
   font-size: 1.1rem;
   font-weight: bold;
 }
-
 #option-list {
   list-style: none;
-  max-height: 50vh;
+  max-height: 45vh;
   overflow-y: auto;
+  margin-bottom: 1rem;
 }
-
 #option-list li {
   display: flex;
   justify-content: space-between;
@@ -162,27 +160,49 @@ h2 {
   margin-bottom: 0.8rem;
   font-size: 1.1rem;
 }
-
+#reset-button {
+  width: 100%;
+  border-radius: 5px;
+  padding: 0.8rem;
+  border: 1px solid var(--secondary-color);
+  background: transparent;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s, color 0.2s;
+}
+#reset-button:hover {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+}
 .option-details {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.option-text-details {
   display: flex;
   flex-direction: column;
 }
-
 .option-text {
   font-weight: 600;
 }
-
 .option-weight {
   font-size: 0.8rem;
   color: #ccc;
   opacity: 0.8;
 }
-
 .option-controls {
   display: flex;
   gap: 0.5rem;
 }
-
 .option-controls button {
   background: none;
   border: none;
@@ -190,14 +210,11 @@ h2 {
   cursor: pointer;
   transition: transform 0.2s;
 }
-
 .option-controls button:hover {
   transform: scale(1.2);
 }
-
-/* 모달 스타일 */
 .modal-container {
-  display: none; /* 기본적으로 숨김 */
+  display: none;
   position: fixed;
   z-index: 1000;
   left: 0;
@@ -208,11 +225,9 @@ h2 {
   justify-content: center;
   align-items: center;
 }
-
 .modal-container.visible {
-  display: flex; /* 보일 때 */
+  display: flex;
 }
-
 .modal-content {
   background-color: var(--primary-color);
   padding: 2rem;
@@ -221,24 +236,20 @@ h2 {
   width: 90%;
   max-width: 400px;
 }
-
 .modal-content h2 {
   text-align: center;
   color: var(--accent-color);
 }
-
 #modal-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
-
 .modal-buttons {
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
 }
-
 .modal-buttons button {
   flex: 1;
   padding: 0.8rem;
@@ -248,18 +259,14 @@ h2 {
   cursor: pointer;
   border: none;
 }
-
 .modal-buttons button[type='submit'] {
   background-color: var(--accent-color);
   color: var(--text-color);
 }
-
 .modal-buttons button[type='button'] {
   background-color: var(--secondary-color);
   color: var(--text-color);
 }
-
-/* 반응형 디자인 */
 @media (max-width: 900px) {
   .app-container {
     flex-direction: column;
