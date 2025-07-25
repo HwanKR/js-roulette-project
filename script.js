@@ -10,6 +10,9 @@
   const colorInput = document.getElementById('color-input');
   const optionList = document.getElementById('option-list');
   const resetButton = document.getElementById('reset-button');
+  const settingsButton = document.getElementById('settings-button');
+  const optionsSection = document.querySelector('.options-section');
+  const closeSettings = document.getElementById('close-settings');
 
   /* -------------------- STATE ------------------ */
   const storageKey = 'proRouletteOptions_v2';
@@ -263,6 +266,14 @@
       state.currentAngle = 0;
       updateAndSave();
     }
+  });
+
+  settingsButton.addEventListener('click', () => {
+    optionsSection.classList.add('open');
+  });
+
+  closeSettings.addEventListener('click', () => {
+    optionsSection.classList.remove('open');
   });
 
   /* -------------------- SPIN ------------------- */
