@@ -6,6 +6,7 @@
   --text-color: #f0f0f0;
   --white-color: #ffffff;
 }
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
@@ -13,11 +14,13 @@ body {
   color: var(--text-color);
   line-height: 1.6;
 }
+
 .app-container {
   display: flex;
   flex-wrap: wrap;
   min-height: 100vh;
 }
+
 .roulette-section {
   flex: 2;
   display: flex;
@@ -27,6 +30,7 @@ body {
   padding: 2rem;
   min-width: 400px;
 }
+
 h1 {
   font-size: 3rem;
   font-weight: 700;
@@ -34,11 +38,13 @@ h1 {
   letter-spacing: 2px;
   margin-bottom: 2rem;
 }
+
 .roulette-container {
   position: relative;
   width: 450px;
   height: 450px;
 }
+
 #arrow {
   position: absolute;
   top: -10px;
@@ -52,11 +58,13 @@ h1 {
   filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.3));
   z-index: 10;
 }
+
 #roulette-canvas {
   transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
+
 #spin-button {
   margin-top: 2rem;
   padding: 1rem 3rem;
@@ -70,15 +78,18 @@ h1 {
   transition: transform 0.2s, box-shadow 0.2s;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
+
 #spin-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
 }
+
 #spin-button:disabled {
   cursor: not-allowed;
   background: #555;
   box-shadow: none;
 }
+
 .options-section {
   flex: 1;
   background-color: var(--primary-color);
@@ -86,34 +97,42 @@ h1 {
   min-width: 320px;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
 }
+
 h2 {
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
   border-bottom: 2px solid var(--secondary-color);
   padding-bottom: 0.5rem;
 }
+
+/* 옵션 추가 폼 */
 #option-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 2rem;
 }
+
 .input-row {
   display: flex;
   gap: 1rem;
 }
+
 .input-group {
   display: flex;
   flex-direction: column;
 }
+
 .text-group {
   flex-grow: 1;
 }
+
 .input-group label {
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
   color: #ccc;
 }
+
 input[type='text'],
 input[type='number'] {
   width: 100%;
@@ -125,6 +144,7 @@ input[type='number'] {
   border-radius: 5px;
   font-size: 1rem;
 }
+
 input[type='color'] {
   width: 50px;
   height: 46px;
@@ -134,6 +154,7 @@ input[type='color'] {
   background: var(--bg-color);
   cursor: pointer;
 }
+
 #option-form button {
   border-radius: 5px;
   padding: 0.8rem;
@@ -144,22 +165,169 @@ input[type='color'] {
   font-size: 1.1rem;
   font-weight: bold;
 }
+
+/* 옵션 리스트 컨테이너 */
 #option-list {
   list-style: none;
   max-height: 45vh;
   overflow-y: auto;
   margin-bottom: 1rem;
+  padding-left: 0;
 }
+
+/* 각 옵션 항목: 가로 레이아웃 */
 #option-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: block;
   background: var(--secondary-color);
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  margin-bottom: 0.8rem;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+/* 내부 콘텐츠 flex 배치 */
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* 색상 편집 섹션 */
+.color-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 50px;
+}
+
+.color-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.color-swatch:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.color-swatch:active {
+  transform: scale(1.05);
+}
+
+/* 텍스트·비중 편집 섹션 */
+.text-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.text-edit-group,
+.weight-edit-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.option-text,
+.option-weight {
+  flex: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  min-width: 0;
+}
+
+.option-text {
+  font-weight: 600;
   font-size: 1.1rem;
 }
+
+.option-weight {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.option-text:hover,
+.option-weight:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 편집 아이콘 */
+.edit-icon {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  transition: opacity 0.2s, transform 0.1s;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  user-select: none;
+}
+
+.edit-icon:hover {
+  opacity: 1;
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.edit-icon:active {
+  transform: scale(0.95);
+}
+
+.text-edit-group:hover .edit-icon,
+.weight-edit-group:hover .edit-icon,
+.color-section:hover .edit-icon {
+  opacity: 1;
+}
+
+/* 삭제 버튼 영역 */
+.control-section {
+  display: flex;
+  align-items: center;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: rgba(233, 69, 96, 0.2);
+  transform: scale(1.1);
+}
+
+/* 인라인 편집 입력 필드 */
+.inline-input {
+  background: var(--bg-color);
+  color: var(--text-color);
+  border: 2px solid var(--accent-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-weight: inherit;
+  min-width: 100px;
+  flex: 1;
+}
+
+.inline-input:focus {
+  outline: none;
+  border-color: #fff;
+  box-shadow: 0 0 5px rgba(233, 69, 96, 0.5);
+}
+
+/* 옵션 초기화 버튼 */
 #reset-button {
   width: 100%;
   border-radius: 5px;
@@ -172,103 +340,50 @@ input[type='color'] {
   font-weight: bold;
   transition: background-color 0.2s, color 0.2s;
 }
+
 #reset-button:hover {
   background-color: var(--secondary-color);
   color: var(--text-color);
 }
-.option-details {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
+
+/* 옵션 리스트 스크롤바 스타일링 (선택사항) */
+#option-list::-webkit-scrollbar {
+  width: 6px;
 }
-.color-swatch {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+
+#option-list::-webkit-scrollbar-track {
+  background: var(--primary-color);
 }
-.option-text-details {
-  display: flex;
-  flex-direction: column;
+
+#option-list::-webkit-scrollbar-thumb {
+  background: var(--secondary-color);
+  border-radius: 3px;
 }
-.option-text {
-  font-weight: 600;
+
+#option-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
 }
-.option-weight {
-  font-size: 0.8rem;
-  color: #ccc;
-  opacity: 0.8;
-}
-.option-controls {
-  display: flex;
-  gap: 0.5rem;
-}
-.option-controls button {
-  background: none;
-  border: none;
-  font-size: 1.3rem;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.option-controls button:hover {
-  transform: scale(1.2);
-}
-.modal-container {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  justify-content: center;
-  align-items: center;
-}
-.modal-container.visible {
-  display: flex;
-}
-.modal-content {
-  background-color: var(--primary-color);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
-  width: 90%;
-  max-width: 400px;
-}
-.modal-content h2 {
-  text-align: center;
-  color: var(--accent-color);
-}
-#modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.modal-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
-.modal-buttons button {
-  flex: 1;
-  padding: 0.8rem;
-  border-radius: 5px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-}
-.modal-buttons button[type='submit'] {
-  background-color: var(--accent-color);
-  color: var(--text-color);
-}
-.modal-buttons button[type='button'] {
-  background-color: var(--secondary-color);
-  color: var(--text-color);
-}
+
+/* 반응형 */
 @media (max-width: 900px) {
   .app-container {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .option-content {
+    flex-direction: column;
+    gap: 0.8rem;
+    align-items: stretch;
+  }
+
+  .text-section {
+    order: -1;
+  }
+
+  .color-section {
+    flex-direction: row;
+    justify-content: center;
   }
 }

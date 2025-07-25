@@ -243,18 +243,32 @@ const updateOptionListUI = () => {
     const li = document.createElement('li');
     li.dataset.index = index;
     li.innerHTML = `
-      <div class="option-details">
-        <div class="color-swatch" style="background-color: ${
-          option.color
-        }; border: 2px solid #fff;"></div>
-        <div class="option-text-details">
-          <span class="option-text">${option.text || '(이름 없음)'}</span>
-          <span class="option-weight">비중: ${option.weight}</span>
+      <div class="option-content">
+        <div class="color-section">
+          <div class="color-swatch" style="background-color: ${
+            option.color
+          }; border: 2px solid #fff;" data-index="${index}" data-field="color"></div>
+          <span class="edit-icon">🎨</span>
         </div>
-      </div>
-      <div class="option-controls">
-        <button class="edit-btn" aria-label="수정">✏️</button>
-        <button class="delete-btn" aria-label="삭제">🗑️</button>
+        
+        <div class="text-section">
+          <div class="text-edit-group">
+            <span class="option-text editable" data-index="${index}" data-field="text">${
+      option.text || '(이름 없음)'
+    }</span>
+            <span class="edit-icon">✏️</span>
+          </div>
+          <div class="weight-edit-group">
+            <span class="option-weight editable" data-index="${index}" data-field="weight">비중: ${
+      option.weight
+    }</span>
+            <span class="edit-icon">⚖️</span>
+          </div>
+        </div>
+        
+        <div class="control-section">
+          <button class="delete-btn" aria-label="삭제">🗑️</button>
+        </div>
       </div>
     `;
     $optionList.appendChild(li);
@@ -294,10 +308,48 @@ const handleListClick = (e) => {
   if (!li) return;
   const index = parseInt(li.dataset.index, 10);
 
-  if (e.target.closest('.edit-btn')) {
-    openEditModal(index);
-  } else if (e.target.closest('.delete-btn')) {
+  // 삭제 버튼 클릭
+  if (e.target.closest('.delete-btn')) {
     removeOption(index);
+    return;
+  }
+
+  // 색상 견본 직접 클릭
+  if (e.target.classList.contains('color-swatch')) {
+    startColorEdit(e.target, index, e);
+    return;
+  }
+
+  // 편집 아이콘 클릭 처리
+  if (e.target.classList.contains('edit-icon')) {
+    const parent = e.target.parentElement;
+
+    // 색상 편집 아이콘 클릭
+    if (parent.classList.contains('color-section')) {
+      const colorSwatch = parent.querySelector('.color-swatch');
+      startColorEdit(colorSwatch, index, e);
+      return;
+    }
+
+    // 텍스트 편집 아이콘 클릭
+    if (parent.classList.contains('text-edit-group')) {
+      const textElement = parent.querySelector('.option-text');
+      startInlineEdit(textElement, index);
+      return;
+    }
+
+    // 비중 편집 아이콘 클릭
+    if (parent.classList.contains('weight-edit-group')) {
+      const weightElement = parent.querySelector('.option-weight');
+      startInlineEdit(weightElement, index);
+      return;
+    }
+  }
+
+  // 편집 가능한 요소 직접 클릭
+  if (e.target.classList.contains('editable')) {
+    startInlineEdit(e.target, index);
+    return;
   }
 };
 
@@ -311,6 +363,160 @@ const removeOption = (index) => {
   render();
 };
 
+// 인라인 텍스트/비중 편집 시작 (개선)
+const startInlineEdit = (element, index) => {
+  const field = element.dataset.field;
+  const currentValue =
+    field === 'text' ? state.options[index].text : state.options[index].weight;
+
+  // 이미 편집 중인 경우 무시
+  if (element.querySelector('input') || element.style.display === 'none') {
+    return;
+  }
+
+  // 입력 필드 생성
+  const input = document.createElement('input');
+  input.type = field === 'weight' ? 'number' : 'text';
+  input.value = currentValue;
+  input.className = 'inline-input';
+
+  if (field === 'weight') {
+    input.min = '0.1';
+    input.step = '0.1';
+  }
+
+  // 원래 요소 숨기기
+  element.style.display = 'none';
+
+  // 입력 필드를 같은 위치에 삽입
+  element.parentNode.insertBefore(input, element);
+
+  // 포커스 및 선택
+  input.focus();
+  input.select();
+
+  // 편집 완료 핸들러
+  const finishEdit = () => {
+    const newValue = input.value.trim();
+
+    // 유효성 검사
+    if (field === 'text' && !newValue) {
+      alert('옵션명을 입력해주세요.');
+      input.focus();
+      return;
+    }
+
+    if (field === 'weight') {
+      const numValue = parseFloat(newValue);
+      if (!(numValue > 0)) {
+        alert('유효한 비중 값을 입력해주세요.');
+        input.focus();
+        return;
+      }
+      state.options[index].weight = numValue;
+    } else {
+      state.options[index].text = newValue;
+    }
+
+    // 저장 및 렌더링
+    saveOptions();
+    render();
+  };
+
+  // 취소 핸들러
+  const cancelEdit = () => {
+    input.remove();
+    element.style.display = '';
+  };
+
+  // 이벤트 리스너
+  input.addEventListener('blur', finishEdit);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      finishEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  });
+};
+
+// 색상 편집(팝업 팔레트) — 레이아웃 깨짐 방지
+// 색상 편집 – 팔레트를 클릭 지점 근처에 띄우기
+// 색상 편집 – 팔레트를 클릭 지점 근처에 띄우기 (개선)
+const startColorEdit = (swatchEl, index, event) => {
+  // ① 히든 컬러-피커 생성
+  const picker = document.createElement('input');
+  picker.type = 'color';
+  picker.value = state.options[index].color;
+
+  // ② 마우스 좌표 계산 (안전한 방식)
+  let clickX, clickY;
+
+  if (event && event.clientX !== undefined && event.clientY !== undefined) {
+    // 유효한 이벤트 객체가 있는 경우
+    clickX = event.clientX;
+    clickY = event.clientY;
+  } else if (swatchEl) {
+    // 이벤트 객체가 없으면 색상 견본 요소의 위치 계산
+    const rect = swatchEl.getBoundingClientRect();
+    clickX = rect.left + rect.width / 2;
+    clickY = rect.top + rect.height / 2;
+  } else {
+    // 모든 방법이 실패하면 화면 중앙
+    clickX = window.innerWidth / 2;
+    clickY = window.innerHeight / 2;
+  }
+
+  // ③ 컬러-피커를 계산된 지점에 배치
+  picker.style.position = 'fixed';
+  picker.style.left = `${clickX}px`;
+  picker.style.top = `${clickY}px`;
+  picker.style.opacity = '0';
+  picker.style.pointerEvents = 'none';
+  picker.style.zIndex = '9999'; // 최상위 레이어 보장
+
+  document.body.appendChild(picker);
+
+  // ④ 팔레트 오픈
+  picker.focus();
+  picker.click();
+
+  // ⑤ 색상 변경 처리
+  picker.addEventListener('input', (e) => {
+    const newColor = e.target.value;
+
+    // 중복 색상 확인 (선택사항)
+    const isDuplicate = state.options.some(
+      (opt, i) => i !== index && opt.color === newColor
+    );
+
+    if (isDuplicate) {
+      if (!confirm('이미 사용 중인 색상입니다. 그래도 사용하시겠습니까?')) {
+        return;
+      }
+    }
+
+    state.options[index].color = newColor;
+    saveOptions();
+    render();
+  });
+
+  // ⑥ 팔레트가 닫히면 정리
+  const cleanup = () => {
+    if (picker && picker.parentNode) {
+      picker.parentNode.removeChild(picker);
+    }
+  };
+
+  picker.addEventListener('change', cleanup, { once: true });
+  picker.addEventListener('blur', cleanup, { once: true });
+
+  // 추가 안전장치: 3초 후 자동 정리
+  setTimeout(cleanup, 3000);
+};
+
 const resetOptions = () => {
   if (confirm('모든 옵션을 초기 설정으로 되돌리시겠습니까?')) {
     state.options = getInitialOptions();
@@ -320,40 +526,6 @@ const resetOptions = () => {
     saveOptions();
     render();
   }
-};
-
-const openEditModal = (index) => {
-  state.editingIndex = index;
-  const option = state.options[index];
-  $modalOptionInput.value = option.text;
-  $modalWeightInput.value = option.weight;
-  $modalColorInput.value = option.color;
-  $editModal.classList.add('visible');
-};
-
-const closeEditModal = () => {
-  state.editingIndex = null;
-  $editModal.classList.remove('visible');
-};
-
-const handleEditSubmit = (e) => {
-  e.preventDefault();
-  const newText = $modalOptionInput.value.trim();
-  const newWeight = parseFloat($modalWeightInput.value);
-
-  if (!newText || !(newWeight > 0)) {
-    alert('옵션명과 유효한 비중 값을 입력해주세요.');
-    return;
-  }
-
-  state.options[state.editingIndex] = {
-    text: newText,
-    weight: newWeight,
-    color: $modalColorInput.value,
-  };
-  saveOptions();
-  render();
-  closeEditModal();
 };
 
 // 룰렛 회전 및 당첨 계산 로직
@@ -442,17 +614,12 @@ const finishSpin = (winner) => {
 const init = () => {
   loadOptions();
   render();
-  $colorInput.value = getUniqueColor(); // 초기 색상도 고유하게 설정
+  $colorInput.value = getUniqueColor();
 
   $optionForm.addEventListener('submit', addOption);
   $spinButton.addEventListener('click', spin);
   $optionList.addEventListener('click', handleListClick);
   $resetButton.addEventListener('click', resetOptions);
-  $modalForm.addEventListener('submit', handleEditSubmit);
-  $cancelEditButton.addEventListener('click', closeEditModal);
-  $editModal.addEventListener('click', (e) => {
-    if (e.target === $editModal) closeEditModal();
-  });
 };
 
 init();
