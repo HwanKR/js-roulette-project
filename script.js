@@ -269,7 +269,7 @@
   });
 
   settingsButton.addEventListener('click', () => {
-    optionsSection.classList.add('open');
+    optionsSection.classList.toggle('open');
   });
 
   closeSettings.addEventListener('click', () => {
