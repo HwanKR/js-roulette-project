@@ -4,6 +4,7 @@
   --secondary-color: #0f3460;
   --accent-color: #e94560;
   --text-color: #f0f0f0;
+  --white-color: #ffffff;
 }
 
 body {
@@ -91,7 +92,7 @@ h1 {
   flex: 1;
   background-color: var(--primary-color);
   padding: 2rem;
-  min-width: 300px;
+  min-width: 320px;
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
 }
 
@@ -104,8 +105,8 @@ h2 {
 
 #option-form {
   display: flex;
-  flex-direction: column; /* 세로 정렬로 변경 */
-  gap: 1rem; /* 입력 그룹 간의 간격 추가 */
+  flex-direction: column;
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -121,9 +122,11 @@ h2 {
 }
 
 #option-input,
-#weight-input {
+#weight-input,
+#modal-option-input,
+#modal-weight-input {
   width: 100%;
-  box-sizing: border-box; /* 패딩 포함 크기 계산 */
+  box-sizing: border-box;
   padding: 0.8rem;
   border: 2px solid var(--secondary-color);
   background: var(--bg-color);
@@ -143,8 +146,117 @@ h2 {
   font-weight: bold;
 }
 
-#option-list li span {
-  font-weight: 500;
+#option-list {
+  list-style: none;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+#option-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--secondary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
+}
+
+.option-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.option-text {
+  font-weight: 600;
+}
+
+.option-weight {
+  font-size: 0.8rem;
+  color: #ccc;
+  opacity: 0.8;
+}
+
+.option-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.option-controls button {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.option-controls button:hover {
+  transform: scale(1.2);
+}
+
+/* 모달 스타일 */
+.modal-container {
+  display: none; /* 기본적으로 숨김 */
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-container.visible {
+  display: flex; /* 보일 때 */
+}
+
+.modal-content {
+  background-color: var(--primary-color);
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.4);
+  width: 90%;
+  max-width: 400px;
+}
+
+.modal-content h2 {
+  text-align: center;
+  color: var(--accent-color);
+}
+
+#modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 0.8rem;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+.modal-buttons button[type='submit'] {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.modal-buttons button[type='button'] {
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
 /* 반응형 디자인 */

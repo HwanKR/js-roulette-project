@@ -1,10 +1,16 @@
-// DOM 요소 가져오기
+// --- DOM 요소 가져오기 ---
 const $canvas = document.getElementById('roulette-canvas');
 const $spinButton = document.getElementById('spin-button');
 const $optionForm = document.getElementById('option-form');
 const $optionInput = document.getElementById('option-input');
-const $weightInput = document.getElementById('weight-input'); // 비중 입력 필드 추가
+const $weightInput = document.getElementById('weight-input');
 const $optionList = document.getElementById('option-list');
+// 모달 관련 요소
+const $editModal = document.getElementById('edit-modal');
+const $modalForm = document.getElementById('modal-form');
+const $modalOptionInput = document.getElementById('modal-option-input');
+const $modalWeightInput = document.getElementById('modal-weight-input');
+const $cancelEditButton = document.getElementById('cancel-edit');
 
 const ctx = $canvas.getContext('2d');
 const colors = [
@@ -18,7 +24,7 @@ const colors = [
   '#FF847C',
 ];
 
-// 애플리케이션의 상태 관리 객체 (옵션 구조 변경)
+// --- 애플리케이션 상태 관리 ---
 const state = {
   options: [
     { text: '한식', weight: 2 },
@@ -27,25 +33,23 @@ const state = {
   ],
   currentAngle: 0,
   isSpinning: false,
+  editingIndex: null, // 현재 수정 중인 옵션의 인덱스
 };
 
-// 로컬 스토리지에서 옵션 불러오기
+// --- 데이터 처리 함수 ---
+const storageKey = 'rouletteOptionsWeighted_v1';
 function loadOptions() {
-  const savedOptions = localStorage.getItem('rouletteOptionsWeighted');
+  const savedOptions = localStorage.getItem(storageKey);
   if (savedOptions) {
     state.options = JSON.parse(savedOptions);
   }
 }
 
-// 로컬 스토리지에 옵션 저장하기
 function saveOptions() {
-  localStorage.setItem(
-    'rouletteOptionsWeighted',
-    JSON.stringify(state.options)
-  );
+  localStorage.setItem(storageKey, JSON.stringify(state.options));
 }
 
-// 룰렛 그리기 함수 (비중 기반으로 로직 변경)
+// --- 렌더링 및 UI 업데이트 함수 ---
 function drawRoulette() {
   const totalWeight = state.options.reduce((sum, opt) => sum + opt.weight, 0);
   if (totalWeight <= 0) return;
@@ -54,25 +58,23 @@ function drawRoulette() {
   const centerY = $canvas.height / 2;
   const radius = $canvas.width / 2 - 10;
 
-  let currentDrawingAngle = 0; // 각 조각의 시작 각도
+  let currentDrawingAngle = 0;
 
   ctx.clearRect(0, 0, $canvas.width, $canvas.height);
   ctx.save();
   ctx.translate(centerX, centerY);
-  ctx.rotate(state.currentAngle); // 전체 회전 적용
+  ctx.rotate(state.currentAngle);
 
   state.options.forEach((option, i) => {
     const arcSize = (option.weight / totalWeight) * 2 * Math.PI;
     const endDrawingAngle = currentDrawingAngle + arcSize;
 
-    // 조각 그리기
     ctx.beginPath();
     ctx.arc(0, 0, radius, currentDrawingAngle, endDrawingAngle, false);
     ctx.arc(0, 0, 0, endDrawingAngle, currentDrawingAngle, true);
     ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
 
-    // 텍스트 그리기
     ctx.save();
     ctx.fillStyle = '#FFF';
     ctx.font = 'bold 16px sans-serif';
@@ -83,31 +85,35 @@ function drawRoulette() {
     ctx.fillText(option.text, radius * 0.6, 0);
     ctx.restore();
 
-    currentDrawingAngle = endDrawingAngle; // 다음 조각을 위해 시작 각도 업데이트
+    currentDrawingAngle = endDrawingAngle;
   });
   ctx.restore();
 }
 
-// 옵션 리스트 UI 업데이트 (비중 표시)
 function updateOptionListUI() {
   $optionList.innerHTML = '';
   state.options.forEach((option, index) => {
     const li = document.createElement('li');
-    const content = document.createElement('span');
-    content.textContent = `${option.text} (비중: ${option.weight})`;
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.textContent = '×';
-    deleteBtn.className = 'delete-btn';
-    deleteBtn.onclick = () => removeOption(index);
-
-    li.appendChild(content);
-    li.appendChild(deleteBtn);
+    li.innerHTML = `
+            <div class="option-details">
+                <span class="option-text">${option.text}</span>
+                <span class="option-weight">비중: ${option.weight}</span>
+            </div>
+            <div class="option-controls">
+                <button class="edit-btn" data-index="${index}" aria-label="수정">✏️</button>
+                <button class="delete-btn" data-index="${index}" aria-label="삭제">🗑️</button>
+            </div>
+        `;
     $optionList.appendChild(li);
   });
 }
 
-// 옵션 추가 (비중 값 포함)
+function render() {
+  drawRoulette();
+  updateOptionListUI();
+}
+
+// --- 이벤트 핸들러 및 로직 함수 ---
 function addOption(e) {
   e.preventDefault();
   const newOption = $optionInput.value.trim();
@@ -121,7 +127,19 @@ function addOption(e) {
   }
 }
 
-// 옵션 제거
+function handleListClick(e) {
+  const editBtn = e.target.closest('.edit-btn');
+  const deleteBtn = e.target.closest('.delete-btn');
+
+  if (editBtn) {
+    const index = parseInt(editBtn.dataset.index, 10);
+    openEditModal(index);
+  } else if (deleteBtn) {
+    const index = parseInt(deleteBtn.dataset.index, 10);
+    removeOption(index);
+  }
+}
+
 function removeOption(index) {
   if (state.options.length > 2) {
     state.options.splice(index, 1);
@@ -132,7 +150,34 @@ function removeOption(index) {
   }
 }
 
-// 회전 애니메이션 (변경 없음)
+// 모달 관련 함수
+function openEditModal(index) {
+  state.editingIndex = index;
+  const option = state.options[index];
+  $modalOptionInput.value = option.text;
+  $modalWeightInput.value = option.weight;
+  $editModal.classList.add('visible');
+}
+
+function closeEditModal() {
+  state.editingIndex = null;
+  $editModal.classList.remove('visible');
+}
+
+function handleEditSubmit(e) {
+  e.preventDefault();
+  const newText = $modalOptionInput.value.trim();
+  const newWeight = parseFloat($modalWeightInput.value) || 1;
+
+  if (newText && newWeight > 0 && state.editingIndex !== null) {
+    state.options[state.editingIndex] = { text: newText, weight: newWeight };
+    saveOptions();
+    render();
+    closeEditModal();
+  }
+}
+
+// 회전 관련 함수
 function spin() {
   if (state.isSpinning) return;
   state.isSpinning = true;
@@ -146,11 +191,9 @@ function spin() {
     if (!startTime) startTime = currentTime;
     const elapsedTime = currentTime - startTime;
     const progress = Math.min(elapsedTime / duration, 1);
-
     const easeProgress = 1 - Math.pow(1 - progress, 4);
     const rotation = totalRotation * easeProgress;
     state.currentAngle = (rotation * Math.PI) / 180;
-
     drawRoulette();
 
     if (progress < 1) {
@@ -159,11 +202,9 @@ function spin() {
       finishSpin();
     }
   }
-
   requestAnimationFrame(animate);
 }
 
-// 회전 종료 및 결과 처리 (비중 기반으로 로직 변경)
 function finishSpin() {
   state.isSpinning = false;
   $spinButton.disabled = false;
@@ -173,7 +214,6 @@ function finishSpin() {
 
   const finalAngleInDegrees = (state.currentAngle * 180) / Math.PI;
   const pointerAngle = (360 - (finalAngleInDegrees % 360) + 270) % 360;
-
   let cumulativeAngle = 0;
   let winner = null;
 
@@ -188,10 +228,8 @@ function finishSpin() {
     }
     cumulativeAngle += optionAngle;
   }
-
-  // 혹시 모를 오차를 위한 폴백
   if (!winner) {
-    winner = state.options[state.options.length - 1].text;
+    winner = state.options[state.options.length - 1]?.text || '결과 없음';
   }
 
   setTimeout(() => {
@@ -200,20 +238,22 @@ function finishSpin() {
   }, 100);
 }
 
-// 전체 렌더링 함수
-function render() {
-  drawRoulette();
-  updateOptionListUI();
-}
-
-// 이벤트 리스너 등록
-$spinButton.addEventListener('click', spin);
-$optionForm.addEventListener('submit', addOption);
-
-// 초기화
+// --- 초기화 및 이벤트 리스너 등록 ---
 function init() {
   loadOptions();
   render();
+
+  $optionForm.addEventListener('submit', addOption);
+  $spinButton.addEventListener('click', spin);
+  $optionList.addEventListener('click', handleListClick); // 이벤트 위임
+  $modalForm.addEventListener('submit', handleEditSubmit);
+  $cancelEditButton.addEventListener('click', closeEditModal);
+  // 모달 바깥 영역 클릭 시 닫기
+  $editModal.addEventListener('click', (e) => {
+    if (e.target === $editModal) {
+      closeEditModal();
+    }
+  });
 }
 
 init();
