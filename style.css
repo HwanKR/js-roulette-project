@@ -1,0 +1,162 @@
+:root {
+  --bg-color: #1a1a2e;
+  --primary-color: #16213e;
+  --secondary-color: #0f3460;
+  --accent-color: #e94560;
+  --text-color: #f0f0f0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.app-container {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+}
+
+.roulette-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-width: 400px;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  letter-spacing: 2px;
+  margin-bottom: 2rem;
+}
+
+.roulette-container {
+  position: relative;
+  width: 450px;
+  height: 450px;
+}
+
+#roulette-canvas {
+  transition: transform 5s cubic-bezier(0.1, 0.7, 0.1, 1);
+}
+
+#arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-top: 35px solid var(--accent-color);
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  z-index: 10;
+}
+
+#spin-button {
+  margin-top: 2rem;
+  padding: 1rem 3rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-color);
+  background-image: linear-gradient(45deg, var(--accent-color), #ff7a90);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#spin-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+}
+
+#spin-button:disabled {
+  cursor: not-allowed;
+  background: #555;
+  box-shadow: none;
+}
+
+.options-section {
+  flex: 1;
+  background-color: var(--primary-color);
+  padding: 2rem;
+  min-width: 300px;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--secondary-color);
+  padding-bottom: 0.5rem;
+}
+
+#option-form {
+  display: flex;
+  margin-bottom: 2rem;
+}
+
+#option-input {
+  flex-grow: 1;
+  padding: 0.8rem;
+  border: 2px solid var(--secondary-color);
+  background: var(--bg-color);
+  color: var(--text-color);
+  border-radius: 5px 0 0 5px;
+  font-size: 1rem;
+}
+
+#option-form button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  background: var(--secondary-color);
+  color: var(--text-color);
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+#option-list {
+  list-style: none;
+}
+
+#option-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--secondary-color);
+  padding: 0.8rem;
+  border-radius: 5px;
+  margin-bottom: 0.5rem;
+}
+
+#option-list .delete-btn {
+  background: none;
+  border: none;
+  color: #ff7a90;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+#option-list .delete-btn:hover {
+  color: var(--accent-color);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 900px) {
+  .app-container {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>프로페셔널 룰렛</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reset-css@5.0.2/reset.min.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-container">
+      <main class="roulette-section">
+        <h1>PRO ROULETTE</h1>
+        <div class="roulette-container">
+          <canvas id="roulette-canvas" width="450" height="450"></canvas>
+          <div id="arrow"></div>
+        </div>
+        <button id="spin-button">SPIN!</button>
+      </main>
+      <aside class="options-section">
+        <h2>룰렛 옵션 관리</h2>
+        <form id="option-form">
+          <input
+            type="text"
+            id="option-input"
+            placeholder="새 옵션을 입력하세요"
+            required
+          />
+          <button type="submit">추가</button>
+        </form>
+        <ul id="option-list"></ul>
+      </aside>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
