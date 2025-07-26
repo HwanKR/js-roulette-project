@@ -130,6 +130,25 @@ h1 {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
+#add-option-button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-color);
+  background: var(--secondary-color);
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+#add-option-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
 .close-button {
   position: absolute;
   top: 10px;

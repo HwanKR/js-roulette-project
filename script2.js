@@ -4,7 +4,10 @@
   const canvas = document.getElementById('roulette-canvas');
   const ctx = canvas.getContext('2d');
   const spinButton = document.getElementById('spin-button');
-  const addOptionButton = document.getElementById('add-option-button');
+  const optionForm = document.getElementById('option-form');
+  const optionInput = document.getElementById('option-input');
+  const weightInput = document.getElementById('weight-input');
+  const colorInput = document.getElementById('color-input');
   const optionList = document.getElementById('option-list');
   const resetButton = document.getElementById('reset-button');
   const settingsButton = document.getElementById('settings-button');
@@ -56,17 +59,12 @@
       : generateHighContrastColor();
   };
   const getInitialOptions = () => [
-    { text: '', color: '#F8B195', weight: 1 },
-    { text: '', color: '#F67280', weight: 1 },
+    { text: '옵션1', color: '#F8B195', weight: 1 },
+    { text: '옵션2', color: '#F67280', weight: 1 },
   ];
   const loadOptions = () => {
     const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      state.options = JSON.parse(saved);
-    } else {
-      state.options = getInitialOptions();
-      firstVisit = true;
-    }
+    state.options = saved ? JSON.parse(saved) : getInitialOptions();
   };
   const saveOptions = () =>
     localStorage.setItem(storageKey, JSON.stringify(state.options));
@@ -170,14 +168,21 @@
     renderOptionsList();
     saveOptions();
   };
-  addOptionButton.addEventListener('click', () => {
-    state.options.push({ text: '', weight: 1, color: getUniqueColor() });
+
+  /* -------------------- EVENTS ----------------- */
+  optionForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const txt = optionInput.value.trim(),
+      wt = parseFloat(weightInput.value);
+    if (!txt || wt <= 0) {
+      alert('옵션명과 유효한 비중 값을 입력해주세요.');
+      return;
+    }
+    state.options.push({ text: txt, weight: wt, color: colorInput.value });
+    optionForm.reset();
+    weightInput.value = '1';
+    colorInput.value = getUniqueColor();
     updateAndSave();
-    const idx = state.options.length - 1;
-    const span = optionList.querySelector(
-      `li[data-index="${idx}"] .option-text`
-    );
-    if (span) startInlineEdit(span, idx, 'text');
   });
 
   /* 텍스트·비중 인라인 편집 & 삭제 */
@@ -346,11 +351,7 @@
   (() => {
     document.getElementById('edit-modal')?.remove();
     loadOptions();
+    colorInput.value = getUniqueColor();
     updateAndSave();
-    if (firstVisit) {
-      optionList.querySelectorAll('.option-text').forEach((span, idx) => {
-        startInlineEdit(span, idx, 'text');
-      });
-    }
   })();
 })();
